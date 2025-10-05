@@ -1,0 +1,170 @@
+import 'package:flutter_test/flutter_test.dart';
+import 'package:gain_to_do/data/repositories/workout_repository.dart';
+import 'package:gain_to_do/data/models/workout_menu.dart';
+import 'package:gain_to_do/data/models/workout_session.dart';
+import 'package:isar/isar.dart';
+
+void main() {
+  group('WorkoutRepository Tests', () {
+    late Isar isar;
+    late WorkoutRepository repository;
+
+    setUp(() async {
+      // メモリ内Isarインスタンスを作成（テスト用）
+      isar = await Isar.open(
+        [WorkoutMenuSchema, WorkoutSessionSchema],
+        directory: '',
+        name: 'test_${DateTime.now().millisecondsSinceEpoch}',
+      );
+      repository = WorkoutRepository(isar);
+    });
+
+    tearDown(() async {
+      await isar.close(deleteFromDisk: true);
+    });
+
+    group('Workout Menu Tests', () {
+      test('メニューを追加できること', () async {
+        final menu = WorkoutMenu(
+          title: 'プッシュアップ',
+          isCompleted: false,
+          createdAt: DateTime(2025, 1, 1),
+        );
+
+        await repository.addWorkoutMenu(menu);
+
+        final result = await repository.getWorkoutMenus();
+        expect(result.length, 1);
+        expect(result.first.title, 'プッシュアップ');
+      });
+
+      test('メニューリストを取得できること', () async {
+        final menu1 = WorkoutMenu(
+          title: 'プッシュアップ',
+          isCompleted: false,
+          createdAt: DateTime(2025, 1, 1),
+        );
+        final menu2 = WorkoutMenu(
+          title: 'スクワット',
+          isCompleted: false,
+          createdAt: DateTime(2025, 1, 1),
+        );
+
+        await repository.addWorkoutMenu(menu1);
+        await repository.addWorkoutMenu(menu2);
+
+        final result = await repository.getWorkoutMenus();
+
+        expect(result.length, 2);
+        expect(result[0].title, 'プッシュアップ');
+        expect(result[1].title, 'スクワット');
+      });
+
+      test('メニューを削除できること', () async {
+        final menu = WorkoutMenu(
+          title: 'プッシュアップ',
+          isCompleted: false,
+          createdAt: DateTime(2025, 1, 1),
+        );
+
+        await repository.addWorkoutMenu(menu);
+        final menus = await repository.getWorkoutMenus();
+        await repository.deleteWorkoutMenu(menus.first.id);
+
+        final result = await repository.getWorkoutMenus();
+        expect(result.length, 0);
+      });
+
+      test('メニューを更新できること', () async {
+        final menu = WorkoutMenu(
+          title: 'プッシュアップ',
+          isCompleted: false,
+          createdAt: DateTime(2025, 1, 1),
+        );
+
+        await repository.addWorkoutMenu(menu);
+        final menus = await repository.getWorkoutMenus();
+        final updatedMenu = menus.first.copyWith(isCompleted: true);
+        await repository.updateWorkoutMenu(updatedMenu);
+
+        final result = await repository.getWorkoutMenus();
+        expect(result.first.isCompleted, true);
+      });
+    });
+
+    group('Workout Session Tests', () {
+      test('セッションを保存できること', () async {
+        final session = WorkoutSession(
+          date: DateTime(2025, 1, 1),
+          totalDuration: 3600,
+          youtubeUrl: 'https://www.youtube.com/watch?v=test',
+        );
+
+        await repository.saveWorkoutSession(session);
+
+        final result = await repository.getWorkoutHistory();
+        expect(result.length, 1);
+        expect(result.first.totalDuration, 3600);
+      });
+
+      test('セッション履歴を取得できること', () async {
+        final session1 = WorkoutSession(
+          date: DateTime(2025, 1, 1),
+          totalDuration: 3600,
+          youtubeUrl: null,
+        );
+        final session2 = WorkoutSession(
+          date: DateTime(2025, 1, 2),
+          totalDuration: 2400,
+          youtubeUrl: null,
+        );
+
+        await repository.saveWorkoutSession(session1);
+        await repository.saveWorkoutSession(session2);
+
+        final result = await repository.getWorkoutHistory();
+
+        expect(result.length, 2);
+      });
+
+      test('特定のセッションを取得できること', () async {
+        final session = WorkoutSession(
+          date: DateTime(2025, 1, 1),
+          totalDuration: 3600,
+          youtubeUrl: null,
+        );
+
+        await repository.saveWorkoutSession(session);
+        final sessions = await repository.getWorkoutHistory();
+        final result = await repository.getWorkoutSession(sessions.first.id);
+
+        expect(result, isNotNull);
+        expect(result?.totalDuration, 3600);
+      });
+
+      test('日付範囲でセッションを取得できること', () async {
+        final session1 = WorkoutSession(
+          date: DateTime(2025, 1, 5),
+          totalDuration: 3600,
+          youtubeUrl: null,
+        );
+        final session2 = WorkoutSession(
+          date: DateTime(2025, 2, 5),
+          totalDuration: 2400,
+          youtubeUrl: null,
+        );
+
+        await repository.saveWorkoutSession(session1);
+        await repository.saveWorkoutSession(session2);
+
+        final result = await repository.getSessionsByDateRange(
+          DateTime(2025, 1, 1),
+          DateTime(2025, 1, 31),
+        );
+
+        expect(result.length, 1);
+        expect(result.first.totalDuration, 3600);
+      });
+    });
+  });
+}

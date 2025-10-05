@@ -10,7 +10,7 @@ void main() {
   group('WorkoutMenuItem Widget Tests', () {
     testWidgets('メニューアイテムが正しく表示されること', (tester) async {
       final menu = WorkoutMenu(
-        id: '1',
+        id: 1,
         title: 'プッシュアップ',
         isCompleted: false,
         createdAt: DateTime.now(),
@@ -36,7 +36,7 @@ void main() {
 
     testWidgets('未完了のメニューのチェックボックスがOFFであること', (tester) async {
       final menu = WorkoutMenu(
-        id: '1',
+        id: 1,
         title: 'プッシュアップ',
         isCompleted: false,
         createdAt: DateTime.now(),
@@ -62,7 +62,7 @@ void main() {
 
     testWidgets('完了済みのメニューのチェックボックスがONであること', (tester) async {
       final menu = WorkoutMenu(
-        id: '1',
+        id: 1,
         title: 'プッシュアップ',
         isCompleted: true,
         createdAt: DateTime.now(),
@@ -89,7 +89,7 @@ void main() {
     testWidgets('チェックボックスをタップするとコールバックが呼ばれること', (tester) async {
       var toggleCalled = false;
       final menu = WorkoutMenu(
-        id: '1',
+        id: 1,
         title: 'プッシュアップ',
         isCompleted: false,
         createdAt: DateTime.now(),
@@ -118,7 +118,7 @@ void main() {
     testWidgets('削除ボタンをタップするとコールバックが呼ばれること', (tester) async {
       var deleteCalled = false;
       final menu = WorkoutMenu(
-        id: '1',
+        id: 1,
         title: 'プッシュアップ',
         isCompleted: false,
         createdAt: DateTime.now(),

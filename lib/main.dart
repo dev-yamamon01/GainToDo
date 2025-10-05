@@ -1,7 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gain_to_do/presentation/router/router.dart';
+import 'package:gain_to_do/data/providers/isar_provider.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final isar = await initializeIsar();
+
+  runApp(ProviderScope(
+    overrides: [
+      isarProvider.overrideWithValue(isar),
+    ],
+    child: const MyApp(),
+  ));
 }
 
 class MyApp extends StatelessWidget {
@@ -9,39 +21,11 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
+      routerConfig: router,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key});
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text('MyApp'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('This is My App.'),
-          ],
-        ),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

@@ -12,9 +12,6 @@ void main() {
             home: Scaffold(
               body: WorkoutTimer(
                 elapsedSeconds: 0,
-                isRunning: false,
-                onStart: () {},
-                onStop: () {},
               ),
             ),
           ),
@@ -32,9 +29,6 @@ void main() {
             home: Scaffold(
               body: WorkoutTimer(
                 elapsedSeconds: 3665,
-                isRunning: false,
-                onStart: () {},
-                onStop: () {},
               ),
             ),
           ),
@@ -42,94 +36,6 @@ void main() {
       );
 
       expect(find.text('01:01:05'), findsOneWidget);
-    });
-
-    testWidgets('停止中は開始ボタンが表示されること', (tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: WorkoutTimer(
-                elapsedSeconds: 0,
-                isRunning: false,
-                onStart: () {},
-                onStop: () {},
-              ),
-            ),
-          ),
-        ),
-      );
-
-      expect(find.byIcon(Icons.play_arrow), findsOneWidget);
-      expect(find.byIcon(Icons.stop), findsNothing);
-    });
-
-    testWidgets('実行中は停止ボタンが表示されること', (tester) async {
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: WorkoutTimer(
-                elapsedSeconds: 10,
-                isRunning: true,
-                onStart: () {},
-                onStop: () {},
-              ),
-            ),
-          ),
-        ),
-      );
-
-      expect(find.byIcon(Icons.stop), findsOneWidget);
-      expect(find.byIcon(Icons.play_arrow), findsNothing);
-    });
-
-    testWidgets('開始ボタンをタップするとコールバックが呼ばれること', (tester) async {
-      var startCalled = false;
-
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: WorkoutTimer(
-                elapsedSeconds: 0,
-                isRunning: false,
-                onStart: () => startCalled = true,
-                onStop: () {},
-              ),
-            ),
-          ),
-        ),
-      );
-
-      await tester.tap(find.byIcon(Icons.play_arrow));
-      await tester.pump();
-
-      expect(startCalled, true);
-    });
-
-    testWidgets('停止ボタンをタップするとコールバックが呼ばれること', (tester) async {
-      var stopCalled = false;
-
-      await tester.pumpWidget(
-        ProviderScope(
-          child: MaterialApp(
-            home: Scaffold(
-              body: WorkoutTimer(
-                elapsedSeconds: 10,
-                isRunning: true,
-                onStart: () {},
-                onStop: () => stopCalled = true,
-              ),
-            ),
-          ),
-        ),
-      );
-
-      await tester.tap(find.byIcon(Icons.stop));
-      await tester.pump();
-
-      expect(stopCalled, true);
     });
   });
 }
