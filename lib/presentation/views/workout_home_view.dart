@@ -21,11 +21,17 @@ class _WorkoutHomeViewState extends ConsumerState<WorkoutHomeView> {
     super.dispose();
   }
 
-  void _initializeYoutubePlayer(String url) {
+  void _initializeYoutubePlayer(String url, {bool preservePlaybackPosition = false}) {
     final videoId = YoutubePlayer.convertUrlToId(url);
     if (videoId != null) {
       if (_youtubeController != null) {
-        // 既存のコントローラーがある場合は新しい動画をロード
+        // 既存のコントローラーがある場合
+        final currentVideoId = _youtubeController!.metadata.videoId;
+        if (currentVideoId == videoId && preservePlaybackPosition) {
+          // 同じ動画で再生位置を保持する場合は何もしない
+          return;
+        }
+        // 異なる動画をロード
         _youtubeController!.load(videoId);
         _youtubeController!.play();
       } else {
@@ -193,100 +199,133 @@ class _WorkoutHomeViewState extends ConsumerState<WorkoutHomeView> {
     final viewModelNotifier = ref.read(workoutViewModelProvider.notifier);
     final menusAsync = ref.watch(workoutMenusProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('GainToDo'),
-      ),
-      body: Column(
-        children: [
-          // タイマー表示
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: WorkoutTimer(
-              elapsedSeconds: viewModelState.elapsedTime,
-            ),
-          ),
-          const Divider(),
+    final youtubePlayer = _youtubeController != null
+        ? YoutubePlayer(
+            controller: _youtubeController!,
+            showVideoProgressIndicator: true,
+          )
+        : null;
 
-          // YouTube再生エリア
-          SizedBox(
-            height: 200,
-            child: Stack(
-              children: [
-                if (_youtubeController != null)
-                  YoutubePlayerBuilder(
-                    player: YoutubePlayer(
-                      controller: _youtubeController!,
-                      showVideoProgressIndicator: true,
-                    ),
-                    builder: (context, player) {
-                      return player;
-                    },
-                  )
-                else
-                  GestureDetector(
-                    onTap: () async {
-                      // 動画未セット時は最後の動画を再生
-                      final recentUrlsWithLabels = await viewModelNotifier.getUniqueYoutubeUrlsWithLabels();
-                      if (recentUrlsWithLabels.isNotEmpty && context.mounted) {
-                        final firstItem = recentUrlsWithLabels.first;
-                        final url = firstItem['url']!;
-                        final label = firstItem['label'];
-                        viewModelNotifier.setYoutubeUrl(url, label: label);
-                        _initializeYoutubePlayer(url);
-                      }
-                    },
-                    child: Container(
-                      color: Colors.black12,
-                      child: Center(
-                        child: viewModelState.currentSession?.youtubeUrl != null
-                            ? Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Icon(
+    return YoutubePlayerBuilder(
+      player: YoutubePlayer(
+        controller: _youtubeController ?? YoutubePlayerController(
+          initialVideoId: '',
+          flags: const YoutubePlayerFlags(
+            autoPlay: false,
+            mute: false,
+          ),
+        ),
+        showVideoProgressIndicator: true,
+      ),
+      builder: (context, player) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('GainToDo'),
+          ),
+          body: Column(
+            children: [
+              // タイマー表示
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: WorkoutTimer(
+                  elapsedSeconds: viewModelState.elapsedTime,
+                ),
+              ),
+              const Divider(),
+
+              // YouTube再生エリア
+              if (_youtubeController != null)
+                SizedBox(
+                  height: 200,
+                  child: Stack(
+                    children: [
+                      player,
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: IconButton(
+                          icon: const Icon(Icons.edit),
+                          tooltip: '動画リンクを変更',
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.black54,
+                            foregroundColor: Colors.white,
+                          ),
+                          onPressed: () {
+                            _showYoutubeUrlDialog(context, viewModelNotifier);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              else
+                SizedBox(
+                  height: 200,
+                  child: Stack(
+                    children: [
+                      GestureDetector(
+                        onTap: () async {
+                          // 動画未セット時は最後の動画を再生
+                          final recentUrlsWithLabels = await viewModelNotifier.getUniqueYoutubeUrlsWithLabels();
+                          if (recentUrlsWithLabels.isNotEmpty && context.mounted) {
+                            final firstItem = recentUrlsWithLabels.first;
+                            final url = firstItem['url']!;
+                            final label = firstItem['label'];
+                            viewModelNotifier.setYoutubeUrl(url, label: label);
+                            _initializeYoutubePlayer(url);
+                          }
+                        },
+                        child: Container(
+                          color: Colors.black12,
+                          child: Center(
+                            child: viewModelState.currentSession?.youtubeUrl != null
+                                ? Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.play_circle_outline,
+                                        size: 64,
+                                        color: Colors.grey[600],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                                        child: Text(
+                                          viewModelState.currentSession!.youtubeUrl!,
+                                          style: TextStyle(color: Colors.grey[600]),
+                                          overflow: TextOverflow.ellipsis,
+                                          maxLines: 2,
+                                        ),
+                                      ),
+                                    ],
+                                  )
+                                : Icon(
                                     Icons.play_circle_outline,
                                     size: 64,
                                     color: Colors.grey[600],
                                   ),
-                                  const SizedBox(height: 8),
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                                    child: Text(
-                                      viewModelState.currentSession!.youtubeUrl!,
-                                      style: TextStyle(color: Colors.grey[600]),
-                                      overflow: TextOverflow.ellipsis,
-                                      maxLines: 2,
-                                    ),
-                                  ),
-                                ],
-                              )
-                            : Icon(
-                                Icons.play_circle_outline,
-                                size: 64,
-                                color: Colors.grey[600],
-                              ),
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: IconButton(
-                    icon: const Icon(Icons.edit),
-                    tooltip: '動画リンクを変更',
-                    style: IconButton.styleFrom(
-                      backgroundColor: Colors.black54,
-                      foregroundColor: Colors.white,
-                    ),
-                    onPressed: () {
-                      _showYoutubeUrlDialog(context, viewModelNotifier);
-                    },
+                      Positioned(
+                        top: 8,
+                        right: 8,
+                        child: IconButton(
+                          icon: const Icon(Icons.edit),
+                          tooltip: '動画リンクを変更',
+                          style: IconButton.styleFrom(
+                            backgroundColor: Colors.black54,
+                            foregroundColor: Colors.white,
+                          ),
+                          onPressed: () {
+                            _showYoutubeUrlDialog(context, viewModelNotifier);
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-          ),
-          const Divider(),
+              const Divider(),
 
           // メニューリスト
           Expanded(
@@ -384,14 +423,21 @@ class _WorkoutHomeViewState extends ConsumerState<WorkoutHomeView> {
                                   }
 
                                   // ワークアウト開始
-                                  final recentUrlsWithLabels = await viewModelNotifier.getUniqueYoutubeUrlsWithLabels();
                                   await viewModelNotifier.startWorkout();
-                                  if (recentUrlsWithLabels.isNotEmpty) {
-                                    final firstItem = recentUrlsWithLabels.first;
-                                    final url = firstItem['url']!;
-                                    final label = firstItem['label'];
-                                    viewModelNotifier.setYoutubeUrl(url, label: label);
-                                    _initializeYoutubePlayer(url);
+
+                                  // 動画が既に再生中の場合は再生位置を保持
+                                  if (_youtubeController != null && viewModelState.currentSession?.youtubeUrl != null) {
+                                    _initializeYoutubePlayer(viewModelState.currentSession!.youtubeUrl!, preservePlaybackPosition: true);
+                                  } else {
+                                    // 動画が未設定の場合は最新の動画を読み込む
+                                    final recentUrlsWithLabels = await viewModelNotifier.getUniqueYoutubeUrlsWithLabels();
+                                    if (recentUrlsWithLabels.isNotEmpty) {
+                                      final firstItem = recentUrlsWithLabels.first;
+                                      final url = firstItem['url']!;
+                                      final label = firstItem['label'];
+                                      viewModelNotifier.setYoutubeUrl(url, label: label);
+                                      _initializeYoutubePlayer(url);
+                                    }
                                   }
                                   viewModelNotifier.startTimer();
 
@@ -475,8 +521,8 @@ class _WorkoutHomeViewState extends ConsumerState<WorkoutHomeView> {
             // 既存のセッションがあればそれを使用、なければ新規作成
             if (viewModelState.currentSession == null) {
               // 最近使用した動画を自動設定
+              await viewModelNotifier.startWorkout();
               final recentUrlsWithLabels = await viewModelNotifier.getUniqueYoutubeUrlsWithLabels();
-              viewModelNotifier.startWorkout();
               if (recentUrlsWithLabels.isNotEmpty) {
                 final firstItem = recentUrlsWithLabels.first;
                 final url = firstItem['url']!;
@@ -485,18 +531,14 @@ class _WorkoutHomeViewState extends ConsumerState<WorkoutHomeView> {
                 _initializeYoutubePlayer(url);
               }
             } else {
-              // URL設定済みのセッションがある場合は日時を更新
-              final session = viewModelState.currentSession!.copyWith(
-                date: DateTime.now(),
-              );
-              ref.read(workoutViewModelProvider.notifier).state =
-                  viewModelState.copyWith(
-                isWorkoutActive: true,
-                currentSession: session,
-              );
-              // 動画が設定されていれば再生
-              if (session.youtubeUrl != null && session.youtubeUrl!.isNotEmpty) {
-                _initializeYoutubePlayer(session.youtubeUrl!);
+              // URL設定済みのセッションがある場合
+              await viewModelNotifier.startWorkout();
+              // 動画が既に再生中の場合は再生位置を保持
+              if (_youtubeController != null && viewModelState.currentSession!.youtubeUrl != null) {
+                _initializeYoutubePlayer(viewModelState.currentSession!.youtubeUrl!, preservePlaybackPosition: true);
+              } else if (viewModelState.currentSession!.youtubeUrl != null && viewModelState.currentSession!.youtubeUrl!.isNotEmpty) {
+                // コントローラーがない場合は作成
+                _initializeYoutubePlayer(viewModelState.currentSession!.youtubeUrl!);
               }
             }
             viewModelNotifier.startTimer();
@@ -509,6 +551,8 @@ class _WorkoutHomeViewState extends ConsumerState<WorkoutHomeView> {
           viewModelState.isWorkoutActive ? '筋トレ終了' : '筋トレ開始',
         ),
       ),
+        );
+      },
     );
   }
 }
