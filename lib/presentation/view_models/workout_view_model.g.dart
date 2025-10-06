@@ -53,7 +53,7 @@ final workoutHistoryProvider =
 );
 
 typedef WorkoutHistoryRef = AutoDisposeStreamProviderRef<List<WorkoutSession>>;
-String _$workoutViewModelHash() => r'ed6483e72ec186c1a4d7bd76c79e270d94577a46';
+String _$workoutViewModelHash() => r'56010b1c83d195a052dcde9835d0974c349f2a92';
 
 /// See also [WorkoutViewModel].
 @ProviderFor(WorkoutViewModel)

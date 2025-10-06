@@ -10,5 +10,6 @@ class WorkoutState with _$WorkoutState {
     @Default(false) bool isWorkoutActive,
     @Default(false) bool isTimerRunning,
     @Default(0) int elapsedTime,
+    @Default({}) Map<int, int> remainingSets, // メニューID -> 残りセット数
   }) = _WorkoutState;
 }

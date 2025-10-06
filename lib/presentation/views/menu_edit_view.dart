@@ -14,6 +14,7 @@ class MenuEditView extends ConsumerStatefulWidget {
 class _MenuEditViewState extends ConsumerState<MenuEditView> {
   void _showMenuDialog({WorkoutMenu? menu}) {
     final titleController = TextEditingController(text: menu?.title ?? '');
+    final setsController = TextEditingController(text: (menu?.totalSets ?? 3).toString());
     final selectedDays = <int>{...(menu?.scheduleDays ?? [0])};
 
     showDialog(
@@ -33,6 +34,16 @@ class _MenuEditViewState extends ConsumerState<MenuEditView> {
                     border: OutlineInputBorder(),
                   ),
                   autofocus: true,
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: setsController,
+                  decoration: const InputDecoration(
+                    hintText: 'セット数',
+                    border: OutlineInputBorder(),
+                    labelText: 'セット数',
+                  ),
+                  keyboardType: TextInputType.number,
                 ),
                 const SizedBox(height: 16),
                 const Align(
@@ -93,12 +104,15 @@ class _MenuEditViewState extends ConsumerState<MenuEditView> {
               onPressed: () {
                 if (titleController.text.trim().isEmpty) return;
 
+                final sets = int.tryParse(setsController.text) ?? 3;
+
                 final updatedMenu = WorkoutMenu(
                   id: menu?.id ?? Isar.autoIncrement,
                   title: titleController.text.trim(),
                   isCompleted: menu?.isCompleted ?? false,
                   createdAt: menu?.createdAt ?? DateTime.now(),
                   scheduleDays: selectedDays.toList()..sort(),
+                  totalSets: sets > 0 ? sets : 3,
                 );
 
                 if (menu == null) {

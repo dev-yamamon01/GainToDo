@@ -20,6 +20,7 @@ mixin _$WorkoutState {
   bool get isWorkoutActive => throw _privateConstructorUsedError;
   bool get isTimerRunning => throw _privateConstructorUsedError;
   int get elapsedTime => throw _privateConstructorUsedError;
+  Map<int, int> get remainingSets => throw _privateConstructorUsedError;
 
   @JsonKey(ignore: true)
   $WorkoutStateCopyWith<WorkoutState> get copyWith =>
@@ -36,7 +37,8 @@ abstract class $WorkoutStateCopyWith<$Res> {
       {WorkoutSession? currentSession,
       bool isWorkoutActive,
       bool isTimerRunning,
-      int elapsedTime});
+      int elapsedTime,
+      Map<int, int> remainingSets});
 }
 
 /// @nodoc
@@ -56,6 +58,7 @@ class _$WorkoutStateCopyWithImpl<$Res, $Val extends WorkoutState>
     Object? isWorkoutActive = null,
     Object? isTimerRunning = null,
     Object? elapsedTime = null,
+    Object? remainingSets = null,
   }) {
     return _then(_value.copyWith(
       currentSession: freezed == currentSession
@@ -74,6 +77,10 @@ class _$WorkoutStateCopyWithImpl<$Res, $Val extends WorkoutState>
           ? _value.elapsedTime
           : elapsedTime // ignore: cast_nullable_to_non_nullable
               as int,
+      remainingSets: null == remainingSets
+          ? _value.remainingSets
+          : remainingSets // ignore: cast_nullable_to_non_nullable
+              as Map<int, int>,
     ) as $Val);
   }
 }
@@ -90,7 +97,8 @@ abstract class _$$WorkoutStateImplCopyWith<$Res>
       {WorkoutSession? currentSession,
       bool isWorkoutActive,
       bool isTimerRunning,
-      int elapsedTime});
+      int elapsedTime,
+      Map<int, int> remainingSets});
 }
 
 /// @nodoc
@@ -108,6 +116,7 @@ class __$$WorkoutStateImplCopyWithImpl<$Res>
     Object? isWorkoutActive = null,
     Object? isTimerRunning = null,
     Object? elapsedTime = null,
+    Object? remainingSets = null,
   }) {
     return _then(_$WorkoutStateImpl(
       currentSession: freezed == currentSession
@@ -126,6 +135,10 @@ class __$$WorkoutStateImplCopyWithImpl<$Res>
           ? _value.elapsedTime
           : elapsedTime // ignore: cast_nullable_to_non_nullable
               as int,
+      remainingSets: null == remainingSets
+          ? _value._remainingSets
+          : remainingSets // ignore: cast_nullable_to_non_nullable
+              as Map<int, int>,
     ));
   }
 }
@@ -137,7 +150,9 @@ class _$WorkoutStateImpl implements _WorkoutState {
       {this.currentSession,
       this.isWorkoutActive = false,
       this.isTimerRunning = false,
-      this.elapsedTime = 0});
+      this.elapsedTime = 0,
+      final Map<int, int> remainingSets = const {}})
+      : _remainingSets = remainingSets;
 
   @override
   final WorkoutSession? currentSession;
@@ -150,10 +165,18 @@ class _$WorkoutStateImpl implements _WorkoutState {
   @override
   @JsonKey()
   final int elapsedTime;
+  final Map<int, int> _remainingSets;
+  @override
+  @JsonKey()
+  Map<int, int> get remainingSets {
+    if (_remainingSets is EqualUnmodifiableMapView) return _remainingSets;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_remainingSets);
+  }
 
   @override
   String toString() {
-    return 'WorkoutState(currentSession: $currentSession, isWorkoutActive: $isWorkoutActive, isTimerRunning: $isTimerRunning, elapsedTime: $elapsedTime)';
+    return 'WorkoutState(currentSession: $currentSession, isWorkoutActive: $isWorkoutActive, isTimerRunning: $isTimerRunning, elapsedTime: $elapsedTime, remainingSets: $remainingSets)';
   }
 
   @override
@@ -168,12 +191,19 @@ class _$WorkoutStateImpl implements _WorkoutState {
             (identical(other.isTimerRunning, isTimerRunning) ||
                 other.isTimerRunning == isTimerRunning) &&
             (identical(other.elapsedTime, elapsedTime) ||
-                other.elapsedTime == elapsedTime));
+                other.elapsedTime == elapsedTime) &&
+            const DeepCollectionEquality()
+                .equals(other._remainingSets, _remainingSets));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, currentSession, isWorkoutActive,
-      isTimerRunning, elapsedTime);
+  int get hashCode => Object.hash(
+      runtimeType,
+      currentSession,
+      isWorkoutActive,
+      isTimerRunning,
+      elapsedTime,
+      const DeepCollectionEquality().hash(_remainingSets));
 
   @JsonKey(ignore: true)
   @override
@@ -187,7 +217,8 @@ abstract class _WorkoutState implements WorkoutState {
       {final WorkoutSession? currentSession,
       final bool isWorkoutActive,
       final bool isTimerRunning,
-      final int elapsedTime}) = _$WorkoutStateImpl;
+      final int elapsedTime,
+      final Map<int, int> remainingSets}) = _$WorkoutStateImpl;
 
   @override
   WorkoutSession? get currentSession;
@@ -197,6 +228,8 @@ abstract class _WorkoutState implements WorkoutState {
   bool get isTimerRunning;
   @override
   int get elapsedTime;
+  @override
+  Map<int, int> get remainingSets;
   @override
   @JsonKey(ignore: true)
   _$$WorkoutStateImplCopyWith<_$WorkoutStateImpl> get copyWith =>

@@ -5,14 +5,18 @@ class WorkoutMenuItem extends StatelessWidget {
   final WorkoutMenu menu;
   final VoidCallback? onToggle;
   final VoidCallback? onDelete;
+  final VoidCallback? onReset;
   final bool showCheckbox;
+  final int? remainingSets;
 
   const WorkoutMenuItem({
     super.key,
     required this.menu,
     this.onToggle,
     this.onDelete,
+    this.onReset,
     this.showCheckbox = true,
+    this.remainingSets,
   });
 
   @override
@@ -24,13 +28,37 @@ class WorkoutMenuItem extends StatelessWidget {
               onChanged: onToggle != null ? (_) => onToggle!() : null,
             )
           : null,
-      title: Text(
-        menu.title,
-        style: TextStyle(
-          decoration: showCheckbox && menu.isCompleted
-              ? TextDecoration.lineThrough
-              : null,
-        ),
+      title: Row(
+        children: [
+          Expanded(
+            child: Text(
+              menu.title,
+              style: TextStyle(
+                decoration: showCheckbox && menu.isCompleted
+                    ? TextDecoration.lineThrough
+                    : null,
+              ),
+            ),
+          ),
+          if (remainingSets != null) ...[
+            Text(
+              '残り${remainingSets}セット',
+              style: TextStyle(
+                fontSize: 14,
+                color: remainingSets == 0 ? Colors.green : Colors.grey[600],
+                fontWeight: remainingSets == 0 ? FontWeight.bold : FontWeight.normal,
+              ),
+            ),
+            if (onReset != null)
+              IconButton(
+                icon: const Icon(Icons.refresh, size: 18),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+                onPressed: onReset,
+                tooltip: 'セット数をリセット',
+              ),
+          ],
+        ],
       ),
       trailing: onDelete != null
           ? IconButton(

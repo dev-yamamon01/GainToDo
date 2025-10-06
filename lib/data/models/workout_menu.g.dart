@@ -41,6 +41,11 @@ const WorkoutMenuSchema = CollectionSchema(
       id: 4,
       name: r'title',
       type: IsarType.string,
+    ),
+    r'totalSets': PropertySchema(
+      id: 5,
+      name: r'totalSets',
+      type: IsarType.long,
     )
   },
   estimateSize: _workoutMenuEstimateSize,
@@ -79,6 +84,7 @@ void _workoutMenuSerialize(
   writer.writeBool(offsets[2], object.isCompleted);
   writer.writeLongList(offsets[3], object.scheduleDays);
   writer.writeString(offsets[4], object.title);
+  writer.writeLong(offsets[5], object.totalSets);
 }
 
 WorkoutMenu _workoutMenuDeserialize(
@@ -93,6 +99,7 @@ WorkoutMenu _workoutMenuDeserialize(
     isCompleted: reader.readBool(offsets[2]),
     scheduleDays: reader.readLongList(offsets[3]) ?? const [0],
     title: reader.readString(offsets[4]),
+    totalSets: reader.readLongOrNull(offsets[5]) ?? 3,
   );
   return object;
 }
@@ -114,6 +121,8 @@ P _workoutMenuDeserializeProp<P>(
       return (reader.readLongList(offset) ?? const [0]) as P;
     case 4:
       return (reader.readString(offset)) as P;
+    case 5:
+      return (reader.readLongOrNull(offset) ?? 3) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -662,6 +671,62 @@ extension WorkoutMenuQueryFilter
       ));
     });
   }
+
+  QueryBuilder<WorkoutMenu, WorkoutMenu, QAfterFilterCondition>
+      totalSetsEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'totalSets',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<WorkoutMenu, WorkoutMenu, QAfterFilterCondition>
+      totalSetsGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'totalSets',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<WorkoutMenu, WorkoutMenu, QAfterFilterCondition>
+      totalSetsLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'totalSets',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<WorkoutMenu, WorkoutMenu, QAfterFilterCondition>
+      totalSetsBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'totalSets',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
 }
 
 extension WorkoutMenuQueryObject
@@ -717,6 +782,18 @@ extension WorkoutMenuQuerySortBy
   QueryBuilder<WorkoutMenu, WorkoutMenu, QAfterSortBy> sortByTitleDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'title', Sort.desc);
+    });
+  }
+
+  QueryBuilder<WorkoutMenu, WorkoutMenu, QAfterSortBy> sortByTotalSets() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalSets', Sort.asc);
+    });
+  }
+
+  QueryBuilder<WorkoutMenu, WorkoutMenu, QAfterSortBy> sortByTotalSetsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalSets', Sort.desc);
     });
   }
 }
@@ -782,6 +859,18 @@ extension WorkoutMenuQuerySortThenBy
       return query.addSortBy(r'title', Sort.desc);
     });
   }
+
+  QueryBuilder<WorkoutMenu, WorkoutMenu, QAfterSortBy> thenByTotalSets() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalSets', Sort.asc);
+    });
+  }
+
+  QueryBuilder<WorkoutMenu, WorkoutMenu, QAfterSortBy> thenByTotalSetsDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'totalSets', Sort.desc);
+    });
+  }
 }
 
 extension WorkoutMenuQueryWhereDistinct
@@ -814,6 +903,12 @@ extension WorkoutMenuQueryWhereDistinct
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'title', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<WorkoutMenu, WorkoutMenu, QDistinct> distinctByTotalSets() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'totalSets');
     });
   }
 }
@@ -854,6 +949,12 @@ extension WorkoutMenuQueryProperty
   QueryBuilder<WorkoutMenu, String, QQueryOperations> titleProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'title');
+    });
+  }
+
+  QueryBuilder<WorkoutMenu, int, QQueryOperations> totalSetsProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'totalSets');
     });
   }
 }

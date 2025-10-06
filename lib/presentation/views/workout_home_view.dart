@@ -224,35 +224,48 @@ class _WorkoutHomeViewState extends ConsumerState<WorkoutHomeView> {
                     },
                   )
                 else
-                  Container(
-                    color: Colors.black12,
-                    child: Center(
-                      child: viewModelState.currentSession?.youtubeUrl != null
-                          ? Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.play_circle_outline,
-                                  size: 64,
-                                  color: Colors.grey[600],
-                                ),
-                                const SizedBox(height: 8),
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                                  child: Text(
-                                    viewModelState.currentSession!.youtubeUrl!,
-                                    style: TextStyle(color: Colors.grey[600]),
-                                    overflow: TextOverflow.ellipsis,
-                                    maxLines: 2,
+                  GestureDetector(
+                    onTap: () async {
+                      // 動画未セット時は最後の動画を再生
+                      final recentUrlsWithLabels = await viewModelNotifier.getUniqueYoutubeUrlsWithLabels();
+                      if (recentUrlsWithLabels.isNotEmpty && context.mounted) {
+                        final firstItem = recentUrlsWithLabels.first;
+                        final url = firstItem['url']!;
+                        final label = firstItem['label'];
+                        viewModelNotifier.setYoutubeUrl(url, label: label);
+                        _initializeYoutubePlayer(url);
+                      }
+                    },
+                    child: Container(
+                      color: Colors.black12,
+                      child: Center(
+                        child: viewModelState.currentSession?.youtubeUrl != null
+                            ? Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.play_circle_outline,
+                                    size: 64,
+                                    color: Colors.grey[600],
                                   ),
-                                ),
-                              ],
-                            )
-                          : Icon(
-                              Icons.play_circle_outline,
-                              size: 64,
-                              color: Colors.grey[600],
-                            ),
+                                  const SizedBox(height: 8),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                                    child: Text(
+                                      viewModelState.currentSession!.youtubeUrl!,
+                                      style: TextStyle(color: Colors.grey[600]),
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 2,
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : Icon(
+                                Icons.play_circle_outline,
+                                size: 64,
+                                color: Colors.grey[600],
+                              ),
+                      ),
                     ),
                   ),
                 Positioned(
@@ -302,11 +315,98 @@ class _WorkoutHomeViewState extends ConsumerState<WorkoutHomeView> {
                         itemCount: todayMenus.length,
                         itemBuilder: (context, index) {
                           final menu = todayMenus[index];
+                          final remainingSets = viewModelState.remainingSets[menu.id] ?? menu.totalSets;
+
                           return WorkoutMenuItem(
                             menu: menu,
-                            onToggle: () {
-                              viewModelNotifier.toggleMenuCompletion(menu);
+                            remainingSets: remainingSets,
+                            onToggle: () async {
+                              if (!viewModelState.isWorkoutActive) {
+                                // ワークアウト開始確認ダイアログ
+                                final shouldStart = await showDialog<bool>(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('確認'),
+                                    content: const Text('筋トレを開始しますか？'),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.of(context).pop(false),
+                                        child: const Text('キャンセル'),
+                                      ),
+                                      TextButton(
+                                        onPressed: () => Navigator.of(context).pop(true),
+                                        child: const Text('開始'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+
+                                if (shouldStart == true) {
+                                  // ワークアウト開始処理
+                                  final repository = ref.read(workoutRepositoryProvider);
+                                  final menus = await repository.getWorkoutMenus();
+                                  final hasCompletedMenus = menus.any((m) => m.isCompleted);
+
+                                  if (hasCompletedMenus && context.mounted) {
+                                    final result = await showDialog<String>(
+                                      context: context,
+                                      builder: (context) => AlertDialog(
+                                        title: const Text('確認'),
+                                        content: const Text('すでに完了済みのものはリセットして始めますか？'),
+                                        actions: [
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                            children: [
+                                              Expanded(
+                                                child: TextButton(
+                                                  onPressed: () => Navigator.of(context).pop('keep'),
+                                                  child: const Text('そのまま始める'),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: TextButton(
+                                                  onPressed: () => Navigator.of(context).pop('reset'),
+                                                  child: const Text('リセットする'),
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    );
+
+                                    if (result == 'reset') {
+                                      await viewModelNotifier.uncheckAllMenus();
+                                    } else if (result == null) {
+                                      return;
+                                    }
+                                  }
+
+                                  // ワークアウト開始
+                                  final recentUrlsWithLabels = await viewModelNotifier.getUniqueYoutubeUrlsWithLabels();
+                                  await viewModelNotifier.startWorkout();
+                                  if (recentUrlsWithLabels.isNotEmpty) {
+                                    final firstItem = recentUrlsWithLabels.first;
+                                    final url = firstItem['url']!;
+                                    final label = firstItem['label'];
+                                    viewModelNotifier.setYoutubeUrl(url, label: label);
+                                    _initializeYoutubePlayer(url);
+                                  }
+                                  viewModelNotifier.startTimer();
+
+                                  // セット数を減らす
+                                  viewModelNotifier.decrementSet(menu);
+                                }
+                              } else {
+                                viewModelNotifier.decrementSet(menu);
+                              }
                             },
+                            onReset: viewModelState.isWorkoutActive
+                                ? () {
+                                    viewModelNotifier.resetSet(menu);
+                                  }
+                                : null,
                           );
                         },
                       ),

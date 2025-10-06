@@ -10,6 +10,7 @@ class WorkoutMenu {
   late DateTime createdAt;
   // スケジュール: 0=毎日, 1=月曜, 2=火曜, 3=水曜, 4=木曜, 5=金曜, 6=土曜, 7=日曜
   late List<int> scheduleDays;
+  late int totalSets; // 総セット数
 
   WorkoutMenu({
     this.id = Isar.autoIncrement,
@@ -17,6 +18,7 @@ class WorkoutMenu {
     required this.isCompleted,
     required this.createdAt,
     this.scheduleDays = const [0], // デフォルトは毎日
+    this.totalSets = 3, // デフォルトは3セット
   });
 
   // copyWith for immutability pattern
@@ -26,6 +28,7 @@ class WorkoutMenu {
     bool? isCompleted,
     DateTime? createdAt,
     List<int>? scheduleDays,
+    int? totalSets,
   }) {
     return WorkoutMenu(
       id: id ?? this.id,
@@ -33,6 +36,7 @@ class WorkoutMenu {
       isCompleted: isCompleted ?? this.isCompleted,
       createdAt: createdAt ?? this.createdAt,
       scheduleDays: scheduleDays ?? this.scheduleDays,
+      totalSets: totalSets ?? this.totalSets,
     );
   }
 
@@ -44,6 +48,7 @@ class WorkoutMenu {
         other.title == title &&
         other.isCompleted == isCompleted &&
         other.createdAt == createdAt &&
+        other.totalSets == totalSets &&
         _listEquals(other.scheduleDays, scheduleDays);
   }
 
@@ -58,5 +63,5 @@ class WorkoutMenu {
 
   @override
   int get hashCode =>
-      id.hashCode ^ title.hashCode ^ isCompleted.hashCode ^ createdAt.hashCode ^ scheduleDays.hashCode;
+      id.hashCode ^ title.hashCode ^ isCompleted.hashCode ^ createdAt.hashCode ^ totalSets.hashCode ^ scheduleDays.hashCode;
 }

@@ -65,6 +65,35 @@ class WorkoutViewModel extends _$WorkoutViewModel {
     // Streamが自動で更新を通知
   }
 
+  Future<void> decrementSet(WorkoutMenu menu) async {
+    final currentRemaining = state.remainingSets[menu.id] ?? menu.totalSets;
+
+    if (currentRemaining > 0) {
+      final newRemaining = currentRemaining - 1;
+      final updatedSets = Map<int, int>.from(state.remainingSets);
+      updatedSets[menu.id] = newRemaining;
+
+      state = state.copyWith(remainingSets: updatedSets);
+
+      // 0になったら自動的にチェック
+      if (newRemaining == 0 && !menu.isCompleted) {
+        await toggleMenuCompletion(menu);
+      }
+    }
+  }
+
+  Future<void> resetSet(WorkoutMenu menu) async {
+    final updatedSets = Map<int, int>.from(state.remainingSets);
+    updatedSets[menu.id] = menu.totalSets;
+
+    state = state.copyWith(remainingSets: updatedSets);
+
+    // チェックも解除
+    if (menu.isCompleted) {
+      await toggleMenuCompletion(menu);
+    }
+  }
+
   Future<void> deleteMenu(String id) async {
     final repository = ref.read(workoutRepositoryProvider);
     await repository.deleteWorkoutMenu(int.parse(id));
@@ -76,15 +105,23 @@ class WorkoutViewModel extends _$WorkoutViewModel {
     final menus = await repository.getWorkoutMenus();
     final completedMenus = menus.where((menu) => menu.isCompleted);
 
+    // 残りセット数を初期化
+    final resetSets = <int, int>{};
+    for (final menu in menus) {
+      resetSets[menu.id] = menu.totalSets;
+    }
+
     for (final menu in completedMenus) {
       final uncheckedMenu = menu.copyWith(isCompleted: false);
       await repository.updateWorkoutMenu(uncheckedMenu);
     }
+
+    state = state.copyWith(remainingSets: resetSets);
     // Streamが自動で更新を通知
   }
 
   // Session operations
-  void startWorkout() {
+  Future<void> startWorkout() async {
     final currentSession = WorkoutSession(
       id: DateTime.now().millisecondsSinceEpoch,
       date: DateTime.now(),
@@ -92,9 +129,18 @@ class WorkoutViewModel extends _$WorkoutViewModel {
       youtubeUrl: null,
     );
 
+    // 残りセット数を初期化
+    final repository = ref.read(workoutRepositoryProvider);
+    final menus = await repository.getWorkoutMenus();
+    final initialSets = <int, int>{};
+    for (final menu in menus) {
+      initialSets[menu.id] = menu.totalSets;
+    }
+
     state = state.copyWith(
       isWorkoutActive: true,
       currentSession: currentSession,
+      remainingSets: initialSets,
     );
   }
 
@@ -123,6 +169,7 @@ class WorkoutViewModel extends _$WorkoutViewModel {
       isWorkoutActive: false,
       currentSession: null,
       elapsedTime: 0,
+      remainingSets: {},
     );
   }
 
