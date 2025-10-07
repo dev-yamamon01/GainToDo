@@ -381,10 +381,8 @@ class _WorkoutHomeViewState extends ConsumerState<WorkoutHomeView> {
                                 );
 
                                 if (shouldStart == true) {
-                                  // ワークアウト開始処理
-                                  final repository = ref.read(workoutRepositoryProvider);
-                                  final menus = await repository.getWorkoutMenus();
-                                  final hasCompletedMenus = menus.any((m) => m.isCompleted);
+                                  // ワークアウト開始処理 - 今日のメニューのみチェック
+                                  final hasCompletedMenus = todayMenus.any((m) => m.isCompleted);
 
                                   if (hasCompletedMenus && context.mounted) {
                                     final result = await showDialog<String>(
@@ -478,10 +476,20 @@ class _WorkoutHomeViewState extends ConsumerState<WorkoutHomeView> {
             _youtubeController = null;
             setState(() {});
           } else {
-            // チェック済みのメニューがあるか確認
-            final repository = ref.read(workoutRepositoryProvider);
-            final menus = await repository.getWorkoutMenus();
-            final hasCompletedMenus = menus.any((menu) => menu.isCompleted);
+            // チェック済みのメニューがあるか確認 - 今日のメニューのみチェック
+            final menusAsyncValue = ref.read(workoutMenusProvider);
+            final allMenus = menusAsyncValue.valueOrNull ?? [];
+
+            // 現在の曜日を取得
+            final now = DateTime.now();
+            final currentDay = now.weekday;
+
+            // 今日のメニューのみフィルタ
+            final todayMenus = allMenus.where((menu) {
+              return menu.scheduleDays.contains(0) || menu.scheduleDays.contains(currentDay);
+            }).toList();
+
+            final hasCompletedMenus = todayMenus.any((menu) => menu.isCompleted);
 
             if (hasCompletedMenus && context.mounted) {
               // ダイアログを表示

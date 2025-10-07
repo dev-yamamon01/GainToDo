@@ -24,9 +24,10 @@ class _MenuEditViewState extends ConsumerState<MenuEditView> {
           title: Text(menu == null ? 'メニュー追加' : 'メニュー編集'),
           content: SizedBox(
             width: double.maxFinite,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
                 TextField(
                   controller: titleController,
                   decoration: const InputDecoration(
@@ -53,12 +54,14 @@ class _MenuEditViewState extends ConsumerState<MenuEditView> {
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
                 Wrap(
                   spacing: 8,
+                  runSpacing: 8,
                   children: [
-                    FilterChip(
-                      label: const Text('毎日'),
+                    ChoiceChip(
+                      label: const Text('毎日', style: TextStyle(fontSize: 14)),
+                      labelPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       selected: selectedDays.contains(0),
                       onSelected: (selected) {
                         setState(() {
@@ -72,8 +75,9 @@ class _MenuEditViewState extends ConsumerState<MenuEditView> {
                     ...List.generate(7, (index) {
                       final day = index + 1;
                       final dayNames = ['月', '火', '水', '木', '金', '土', '日'];
-                      return FilterChip(
-                        label: Text(dayNames[index]),
+                      return ChoiceChip(
+                        label: Text(dayNames[index], style: const TextStyle(fontSize: 14)),
+                        labelPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         selected: selectedDays.contains(day),
                         onSelected: (selected) {
                           setState(() {
@@ -92,7 +96,9 @@ class _MenuEditViewState extends ConsumerState<MenuEditView> {
                     }),
                   ],
                 ),
-              ],
+                const SizedBox(height: 16),
+                ],
+              ),
             ),
           ),
           actions: [
