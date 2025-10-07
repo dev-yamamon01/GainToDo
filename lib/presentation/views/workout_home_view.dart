@@ -364,6 +364,7 @@ class _WorkoutHomeViewState extends ConsumerState<WorkoutHomeView> {
                                 // ワークアウト開始確認ダイアログ
                                 final shouldStart = await showDialog<bool>(
                                   context: context,
+                                  barrierDismissible: true,
                                   builder: (context) => AlertDialog(
                                     title: const Text('確認'),
                                     content: const Text('筋トレを開始しますか？'),
@@ -387,6 +388,7 @@ class _WorkoutHomeViewState extends ConsumerState<WorkoutHomeView> {
                                   if (hasCompletedMenus && context.mounted) {
                                     final result = await showDialog<String>(
                                       context: context,
+                                      barrierDismissible: true,
                                       builder: (context) => AlertDialog(
                                         title: const Text('確認'),
                                         content: const Text('すでに完了済みのものはリセットして始めますか？'),
@@ -495,6 +497,7 @@ class _WorkoutHomeViewState extends ConsumerState<WorkoutHomeView> {
               // ダイアログを表示
               final result = await showDialog<String>(
                 context: context,
+                barrierDismissible: true,
                 builder: (context) => AlertDialog(
                   title: const Text('確認'),
                   content: const Text('すでに完了済みのものはリセットして始めますか？'),
@@ -523,6 +526,9 @@ class _WorkoutHomeViewState extends ConsumerState<WorkoutHomeView> {
 
               if (result == 'reset') {
                 await viewModelNotifier.uncheckAllMenus();
+              } else if (result == null) {
+                // ダイアログ外をタップしてキャンセル
+                return;
               }
             }
 

@@ -8,6 +8,10 @@
 
 ## Git運用ルール
 
+### コミットメッセージ
+- createdBy claude~の文言は不要
+- fix:,feat:などのプレフィックスを入れる
+
 ### コミット前の承認
 - **各タスクが完了したら、gitにcommitする前に必ずユーザーの承認を求めること**
 - 承認なしに自動的にcommitしないこと
@@ -50,6 +54,7 @@
 # 4. 使用ライブラリやデザインパターン
 - 基本的にパッケージは最新のバージョンを使用する(ライブラリ同士がコンフリクトする場合は変更可)
 - flutter_riverpod+MVVMでのデザインパターンを使用
+- riverpodを用いているのでsetState()はなるべく使いたくない
 - provider定義やviewmodelのメソッドはriverpodアノテーションをつけて定義してriverpod_generatorで作成
 - go_routerを用いた画面遷移
 - Freezedを用いたモデル作成
